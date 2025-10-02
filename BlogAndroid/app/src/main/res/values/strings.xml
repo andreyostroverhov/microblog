@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Мой Блог</string>
+    <string name="login">Вход</string>
+    <string name="register">Регистрация</string>
+    <string name="username">Имя пользователя</string>
+    <string name="password">Пароль</string>
+    <string name="email">Email</string>
+    <string name="posts">Посты</string>
+    <string name="like">Лайк</string>
+    <string name="logout">Выйти</string>
+    <string name="loading">Загрузка...</string>
+    <string name="error">Ошибка</string>
+    <string name="no_posts">Пока нет постов</string>
+    <string name="author">Автор: %1$s</string>
+    <string name="likes_count">%1$d лайков</string>
+</resources>
