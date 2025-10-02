@@ -1,0 +1,78 @@
+services:
+  # База данных SQL Server
+  blog-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: blog-database
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Passw0rd
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - blog_db_data:/var/opt/mssql
+    restart: unless-stopped
+    networks:
+      - blog-network
+
+  # Backend API
+  blog-api:
+    build:
+      context: ./BlogAPI
+      dockerfile: Dockerfile
+    container_name: blog-backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=blog-db,1433;Database=BlogDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=true;MultipleActiveResultSets=true
+      - Jwt__Key=your-secret-key-that-is-at-least-32-characters-long-for-security
+      - Jwt__Issuer=BlogAPI
+      - Jwt__Audience=BlogAPI
+    ports:
+      - "7000:8080"
+    depends_on:
+      - blog-db
+    restart: unless-stopped
+    networks:
+      - blog-network
+    volumes:
+      - /var/log/BlogAPI:/app/logs
+
+  # Frontend React App
+  blog-frontend:
+    build:
+      context: ./blog-frontend
+      dockerfile: Dockerfile
+    container_name: blog-web
+    ports:
+      - "3000:80"
+    depends_on:
+      - blog-api
+    restart: unless-stopped
+    networks:
+      - blog-network
+
+  # Nginx Reverse Proxy (опционально, для единой точки входа)
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: blog-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - blog-frontend
+      - blog-api
+    restart: unless-stopped
+    networks:
+      - blog-network
+
+volumes:
+  blog_db_data:
+    driver: local
+
+networks:
+  blog-network:
+    driver: bridge
